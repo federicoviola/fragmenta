@@ -1,23 +1,19 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import WalletConnect from "./components/WalletConnect";
 
 function App() {
+  const [walletPublicKey, setWalletPublicKey] = useState(null);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: "2em", fontFamily: "monospace", background: "#111", color: "#0f0" }}>
+      <h1>Fragmenta ✍️</h1>
+      <WalletConnect onConnected={(key) => setWalletPublicKey(key)} />
+
+      {walletPublicKey && (
+        <div style={{ marginTop: "2em" }}>
+          <p>🎉 Your wallet is ready to sign fragments.</p>
+        </div>
+      )}
     </div>
   );
 }
