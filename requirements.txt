@@ -1,0 +1,5 @@
+flask
+jinja2
+beautifulsoup4
+stellar-sdk
+#pyminifier
