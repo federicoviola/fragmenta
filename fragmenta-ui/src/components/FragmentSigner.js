@@ -19,10 +19,15 @@ export default function FragmentSigner() {
   const [signature, setSignature] = useState(null);
   const [publicKey, setPublicKey] = useState(null);
   const [link, setLink] = useState(null);
+  const [explorerLink, setExplorerLink] = useState(null);
+  const [error, setError] = useState(null);
 
   const wallet = new SmartWallet();
 
   const handleSign = async () => {
+    setError(null);
+    setExplorerLink(null);
+
     if (!fragment.trim()) return;
 
     const digest = await sha256(fragment);
@@ -44,10 +49,35 @@ export default function FragmentSigner() {
     const compressed = compressToEncodedURIComponent(html);
     const url = `https://itty.bitty.site/#data:text/html,${compressed}`;
     setLink(url);
+
+    // Enviar a backend Flask
+    try {
+      const response = await fetch("http://localhost:5000/api/publish", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          hash: digest,
+          url: url
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setExplorerLink(data.explorer);
+      } else {
+        setError("Error al publicar en Stellar: " + (data.error || "desconocido"));
+      }
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo conectar al backend.");
+    }
   };
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: "700px", margin: "auto", fontFamily: "monospace" }}>
+    <div style={{ padding: "2rem", fontFamily: "monospace", maxWidth: "720px", margin: "auto" }}>
       <h2>✍️ Fragment Signer</h2>
 
       <textarea
@@ -59,7 +89,7 @@ export default function FragmentSigner() {
       />
 
       <button onClick={handleSign} disabled={!fragment.trim()}>
-        Sign Fragment
+        Sign and Publish
       </button>
 
       {hash && (
@@ -72,8 +102,23 @@ export default function FragmentSigner() {
 
       {link && (
         <div style={{ marginTop: "1.5rem" }}>
-          <p><strong>itty.bitty link:</strong></p>
-          <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+          <p><strong>itty.bitty link:</strong><br />
+            <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+          </p>
+        </div>
+      )}
+
+      {explorerLink && (
+        <div style={{ marginTop: "1rem" }}>
+          <p><strong>✅ Publicado en Stellar Testnet:</strong><br />
+            <a href={explorerLink} target="_blank" rel="noopener noreferrer">{explorerLink}</a>
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ marginTop: "1rem", color: "red" }}>
+          <p><strong>⚠️ Error:</strong> {error}</p>
         </div>
       )}
     </div>
